@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Translate copper pair numbers to 25-pair color codes and back.">
+  <title>25-Pair Color Code</title>
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #22223a;
+      --border: rgba(255,255,255,0.1);
+      --text: #f0efe8;
+      --muted: rgba(240,239,232,0.5);
+      --accent: #378add;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 12px;
+      padding-top: calc(16px + env(safe-area-inset-top, 0px));
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 100px;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .panels { padding: 20px 16px; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    input[type=number], select {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 18px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select {
+      font-size: 16px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    input[type=number]:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .selects { display: flex; gap: 12px; }
+    .select-group { flex: 1; }
+
+    .result-box {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      min-height: 80px;
+    }
+
+    .pair-number {
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    .pair-colors-label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .swatch-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .swatch-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .swatch {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.15);
+      flex-shrink: 0;
+    }
+
+    .swatch-info .role {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .swatch-info .color-name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .divider {
+      width: 1px;
+      height: 52px;
+      background: var(--border);
+    }
+
+    .placeholder {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 12px 0;
+    }
+
+    /* Reference grid */
+    .ref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+    }
+
+    .ref-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+
+    .ref-item:active {
+      border-color: var(--accent);
+    }
+
+    .ref-num {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      min-width: 22px;
+    }
+
+    .ref-swatches {
+      display: flex;
+      gap: 4px;
+    }
+
+    .ref-swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .ref-label {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    /* Binder groups */
+    .binder-section {
+      margin-bottom: 12px;
+    }
+
+    .binder-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 4px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .binder-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.2);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #378add;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: transform .25s ease;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>25-Pair Color Code</h1>
+  <p>Copper pair ↔ color translator</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('num')">Pair # → Colors</button>
+  <button class="tab" onclick="switchTab('col')">Colors → Pair #</button>
+  <button class="tab" onclick="switchTab('ref')">Reference</button>
+</div>
+
+<div class="panels">
+
+  <!-- Panel: Pair # to Colors -->
+  <div id="panel-num" class="panel active">
+    <div class="card">
+      <label>Pair number (1 – 25)</label>
+      <input type="number" id="pairInput" min="1" max="25" inputmode="numeric" placeholder="e.g. 7" oninput="lookupPair()">
+    </div>
+    <div id="pairResult"></div>
+  </div>
+
+  <!-- Panel: Colors to Pair # -->
+  <div id="panel-col" class="panel">
+    <div class="card">
+      <div class="selects">
+        <div class="select-group">
+          <label>Tip color</label>
+          <select id="tipSel" onchange="lookupColor()">
+            <option value="0">White</option>
+            <option value="1">Red</option>
+            <option value="2">Black</option>
+            <option value="3">Yellow</option>
+            <option value="4">Violet</option>
+          </select>
+        </div>
+        <div class="select-group">
+          <label>Ring color</label>
+          <select id="ringSel" onchange="lookupColor()">
+            <option value="0">Blue</option>
+            <option value="1">Orange</option>
+            <option value="2">Green</option>
+            <option value="3">Brown</option>
+            <option value="4">Slate</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="colorResult"></div>
+  </div>
+
+  <!-- Panel: Reference -->
+  <div id="panel-ref" class="panel">
+    <div id="refGrid"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TIPS = [
+  {name:'White',  hex:'#EDECE4', text:'#333'},
+  {name:'Red',    hex:'#C0392B', text:'#fff'},
+  {name:'Black',  hex:'#1a1a1a', text:'#fff'},
+  {name:'Yellow', hex:'#F1C40F', text:'#333'},
+  {name:'Violet', hex:'#7F77DD', text:'#fff'},
+];
+const RINGS = [
+  {name:'Blue',   hex:'#2478C8', text:'#fff'},
+  {name:'Orange', hex:'#D35400', text:'#fff'},
+  {name:'Green',  hex:'#27AE60', text:'#fff'},
+  {name:'Brown',  hex:'#7D4A1E', text:'#fff'},
+  {name:'Slate',  hex:'#7F8C8D', text:'#fff'},
+];
+
+const BINDERS = [
+  {tip:{name:'White',hex:'#EDECE4'},ring:{name:'Blue',hex:'#2478C8'}, pairs:[1,2,3,4,5]},
+  {tip:{name:'White',hex:'#EDECE4'},ring:{name:'Orange',hex:'#D35400'}, pairs:[6,7,8,9,10]},
+  {tip:{name:'White',hex:'#EDECE4'},ring:{name:'Green',hex:'#27AE60'}, pairs:[11,12,13,14,15]},
+  {tip:{name:'White',hex:'#EDECE4'},ring:{name:'Brown',hex:'#7D4A1E'}, pairs:[16,17,18,19,20]},
+  {tip:{name:'White',hex:'#EDECE4'},ring:{name:'Slate',hex:'#7F8C8D'}, pairs:[21,22,23,24,25]},
+];
+
+function getPair(n){
+  const i = n - 1;
+  return {tip: TIPS[Math.floor(i/5)], ring: RINGS[i%5], num: n};
+}
+
+function swatchCard(tip, ring, pairNum){
+  const label = pairNum != null
+    ? `<div class="pair-number">${pairNum}</div><div class="pair-colors-label">${tip.name} / ${ring.name}</div>`
+    : `<div class="pair-colors-label" style="font-size:13px;margin-bottom:4px">Pair</div>`;
+  return `
+    <div class="result-box">
+      ${label}
+      <div class="swatch-row">
+        <div class="swatch-item">
+          <div class="swatch" style="background:${tip.hex}"></div>
+          <div class="swatch-info">
+            <div class="role">Tip</div>
+            <div class="color-name">${tip.name}</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="swatch-item">
+          <div class="swatch" style="background:${ring.hex}"></div>
+          <div class="swatch-info">
+            <div class="role">Ring</div>
+            <div class="color-name">${ring.name}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function lookupPair(){
+  const v = parseInt(document.getElementById('pairInput').value);
+  const el = document.getElementById('pairResult');
+  if(!v || v < 1 || v > 25){
+    el.innerHTML = v ? '<div class="card"><p class="placeholder">Enter a number between 1 and 25</p></div>' : '';
+    return;
+  }
+  const p = getPair(v);
+  el.innerHTML = `<div class="card">${swatchCard(p.tip, p.ring, v)}</div>`;
+}
+
+function lookupColor(){
+  const ti = parseInt(document.getElementById('tipSel').value);
+  const ri = parseInt(document.getElementById('ringSel').value);
+  const n = ti * 5 + ri + 1;
+  const el = document.getElementById('colorResult');
+  el.innerHTML = `<div class="card">${swatchCard(TIPS[ti], RINGS[ri], n)}</div>`;
+}
+
+function buildRef(){
+  const g = document.getElementById('refGrid');
+  let h = '';
+  BINDERS.forEach(b => {
+    h += `<div class="binder-section">
+      <div class="binder-label">
+        <span class="binder-swatch" style="background:${b.tip.hex}"></span>
+        <span class="binder-swatch" style="background:${b.ring.hex}"></span>
+        Binder: ${b.tip.name} / ${b.ring.name} &nbsp;(${b.pairs[0]}–${b.pairs[4]})
+      </div>
+      <div class="ref-grid">`;
+    b.pairs.forEach(n => {
+      const p = getPair(n);
+      h += `<div class="ref-item" onclick="goToPair(${n})">
+        <span class="ref-num">${n}</span>
+        <div class="ref-swatches">
+          <div class="ref-swatch" style="background:${p.tip.hex}" title="${p.tip.name}"></div>
+          <div class="ref-swatch" style="background:${p.ring.hex}" title="${p.ring.name}"></div>
+        </div>
+        <span class="ref-label">${p.tip.name}<br>${p.ring.name}</span>
+      </div>`;
+    });
+    h += '</div></div>';
+  });
+  g.innerHTML = h;
+}
+
+function goToPair(n){
+  switchTab('num');
+  document.getElementById('pairInput').value = n;
+  lookupPair();
+  showToast(`Pair ${n} selected`);
+}
+
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['num','col','ref'][i] === id);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+lookupColor();
+buildRef();
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
